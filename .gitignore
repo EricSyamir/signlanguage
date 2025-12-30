@@ -7,18 +7,15 @@ __pycache__/
 env/
 venv/
 ENV/
-*.h5
-*.keras
 *.pb
 *.pth
 *.onnx
 
-# Models (too large for git - but keep structure)
-models/*.h5
-models/*.keras
-python-backend/models/*.h5
-python-backend/models/*.keras
-!python-backend/models/README.md
+# Models - Now included in git
+# models/*.h5
+# models/*.keras
+# python-backend/models/*.h5
+# python-backend/models/*.keras
 
 # Jupyter Notebooks
 .ipynb_checkpoints/
