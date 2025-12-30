@@ -17,6 +17,12 @@ import gc  # Garbage collection
 from datetime import datetime
 from typing import Optional
 import json
+import logging
+
+# Suppress verbose MediaPipe and TensorFlow warnings
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress TensorFlow warnings
+logging.getLogger('absl').setLevel(logging.ERROR)  # Suppress absl warnings
+logging.getLogger('mediapipe').setLevel(logging.ERROR)  # Suppress MediaPipe warnings
 
 # Web framework
 from fastapi import FastAPI, UploadFile, File, Form, WebSocket, WebSocketDisconnect
@@ -226,9 +232,19 @@ async def ensure_model_loaded():
         try:
             print("📦 Loading MediaPipe model (lazy loading)...")
             Settings.SHOW_DOWNLOAD_PROGRESS = False
-            video_embedding_model = slt.models.MediaPipeLandmarksModel()
+            
+            # Suppress stdout during model loading to reduce log noise
+            import sys
+            from contextlib import redirect_stdout, redirect_stderr
+            import io
+            
+            # Redirect MediaPipe's verbose output
+            f = io.StringIO()
+            with redirect_stdout(f), redirect_stderr(f):
+                video_embedding_model = slt.models.MediaPipeLandmarksModel()
+            
             translator_ready = True
-            print("✅ MediaPipe model loaded!")
+            print("✅ MediaPipe model loaded! (Using CPU - GPU not available)")
             return True
         except Exception as e:
             print(f"❌ Error loading model: {e}")
