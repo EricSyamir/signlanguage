@@ -7,9 +7,22 @@ __pycache__/
 env/
 venv/
 ENV/
+*.h5
+*.keras
+*.pb
+*.pth
+*.onnx
+
+# Models (too large for git - but keep structure)
+models/*.h5
+models/*.keras
 python-backend/models/*.h5
-python-backend/models/*.pth
-python-backend/models/*.pb
+python-backend/models/*.keras
+!python-backend/models/README.md
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb_checkpoints
 
 # IDE
 .vscode/
@@ -29,13 +42,17 @@ Thumbs.db
 *.temp
 .cache/
 
-# Models (too large for git)
-models/
-*.h5
-*.pth
-*.pb
-*.onnx
-
 # Environment variables
 .env
 .env.local
+
+# Training data
+gestures/
+gesture_db.db
+train_images
+train_labels
+val_images
+val_labels
+test_images
+test_labels
+hist

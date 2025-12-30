@@ -66,13 +66,13 @@ Open recognition.html in browser
 3. Make sign language gestures
 4. Watch sentences build in real-time!
 
-## 📊 Supported Gestures (44 Classes)
+## 📊 Supported Gestures (24 Classes)
 
 | Type | Gestures |
 |------|----------|
-| Letters | A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z |
-| Numbers | 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 |
-| Words | Hello, Thank You, I Love You, Yes, No, Please, Sorry, Help |
+| Letters | A, B, C, D, E, F, G, H, I, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y |
+
+**Note:** Sign Language MNIST dataset includes A-Z excluding J and Z (24 classes total)
 
 ## 🏗️ Architecture
 
@@ -122,22 +122,24 @@ SignLanguage/
 
 ## 🧠 The CNN Model
 
-The recognition uses a Convolutional Neural Network trained on ASL gestures:
+The recognition uses a Convolutional Neural Network trained on Sign Language MNIST:
 
 **Architecture:**
 ```
-Input: 50x50x1 (grayscale)
+Input: 28x28x1 (grayscale)
   ↓
-Conv2D(16, 2x2) → MaxPool(2x2)
+Conv2D(75, 3x3) → BatchNorm → MaxPool(2x2)
   ↓
-Conv2D(32, 3x3) → MaxPool(3x3)
+Conv2D(50, 3x3) → Dropout(0.2) → BatchNorm → MaxPool(2x2)
   ↓
-Conv2D(64, 5x5) → MaxPool(5x5)
+Conv2D(25, 3x3) → BatchNorm → MaxPool(2x2)
   ↓
-Flatten → Dense(128) → Dropout(0.2)
+Flatten → Dense(512) → Dropout(0.3)
   ↓
-Output: Softmax(44 classes) → >95% accuracy
+Output: Softmax(24 classes) → >95% accuracy
 ```
+
+**Supported Gestures:** A-Z (excluding J and Z) - 24 letter classes
 
 ## 🎓 Training Your Own Model
 

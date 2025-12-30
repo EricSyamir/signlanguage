@@ -39,34 +39,22 @@ app.add_middleware(
 # Model Configuration
 # ============================================================
 
-# Image size (from original repo - adjust based on your model)
-IMAGE_X, IMAGE_Y = 50, 50
+# Image size for Sign Language MNIST model (28x28)
+IMAGE_X, IMAGE_Y = 28, 28
 
-# ASL Gesture labels (44 classes as per original repo)
-# These map class index to gesture text
+# ASL Gesture labels for Sign Language MNIST (24 classes: A-Z excluding J and Z)
+# Class mapping: 0-8 = A-I, 9 = K, 10-17 = L-S, 18-23 = T-Y
 ASL_GESTURES = {
-    0: "0", 1: "1", 2: "2", 3: "3", 4: "4",
-    5: "5", 6: "6", 7: "7", 8: "8", 9: "9",
-    10: "A", 11: "B", 12: "C", 13: "D", 14: "E",
-    15: "F", 16: "G", 17: "H", 18: "I", 19: "J",
-    20: "K", 21: "L", 22: "M", 23: "N", 24: "O",
-    25: "P", 26: "Q", 27: "R", 28: "S", 29: "T",
-    30: "U", 31: "V", 32: "W", 33: "X", 34: "Y",
-    35: "Z", 36: "Hello", 37: "Thank You", 38: "I Love You", 
-    39: "Yes", 40: "No", 41: "Please", 42: "Sorry", 43: "Help"
+    0: "A", 1: "B", 2: "C", 3: "D", 4: "E",
+    5: "F", 6: "G", 7: "H", 8: "I",
+    9: "K", 10: "L", 11: "M", 12: "N", 13: "O",
+    14: "P", 15: "Q", 16: "R", 17: "S",
+    18: "T", 19: "U", 20: "V", 21: "W", 22: "X", 23: "Y"
 }
 
-# Common words/phrases for sentence building
-WORD_GESTURES = {
-    "Hello": "Hello",
-    "Thank You": "Thank you",
-    "I Love You": "I love you",
-    "Yes": "Yes",
-    "No": "No",
-    "Please": "Please",
-    "Sorry": "Sorry",
-    "Help": "Help"
-}
+# Note: Sign Language MNIST only has letters (A-Z excluding J and Z)
+# For sentence building, we'll combine letters into words
+WORD_GESTURES = {}  # Empty for Sign Language MNIST (letters only)
 
 # Global model variable
 model = None
@@ -94,13 +82,9 @@ class SentenceBuilder:
             self.last_prediction = char
             
         # Confirm character after consistent frames
+        # Sign Language MNIST only has letters, so add to current word
         if self.same_frame_count >= self.frames_for_confirm:
-            if char in WORD_GESTURES:
-                # It's a word gesture, add directly
-                self.current_sentence.append(WORD_GESTURES[char])
-            else:
-                # It's a letter/number
-                self.current_word += char
+            self.current_word += char
             self.same_frame_count = 0
             
     def add_space(self):
@@ -142,8 +126,12 @@ def load_keras_model():
     """Load the trained Keras model"""
     global model
     
-    # Check for model file
+    # Check for model files (Sign Language MNIST model)
     model_paths = [
+        'models/sign_language_cnn_model.h5',
+        '../python-backend/models/sign_language_cnn_model.h5',
+        'sign_language_cnn_model.h5',
+        # Legacy paths
         'models/cnn_model_keras2.h5',
         '../sl-interpreter-model/Code/cnn_model_keras2.h5',
         'cnn_model_keras2.h5'
@@ -155,12 +143,14 @@ def load_keras_model():
                 from tensorflow.keras.models import load_model
                 model = load_model(path)
                 print(f"✅ Model loaded from: {path}")
+                print(f"   Model input shape: {model.input_shape}")
+                print(f"   Model output classes: {model.output_shape[1]}")
                 return True
             except Exception as e:
                 print(f"❌ Error loading model from {path}: {e}")
     
     print("⚠️ No trained model found. Using simulated predictions.")
-    print("   To use real recognition, place cnn_model_keras2.h5 in models/ folder")
+    print("   To use real recognition, place sign_language_cnn_model.h5 in models/ folder")
     return False
 
 def load_histogram():
@@ -241,14 +231,14 @@ def preprocess_image(image_bytes) -> np.ndarray:
         # Fallback: Simple grayscale conversion and resize
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
-        # Center crop to focus on hand area
+        # Center crop to focus on hand area (for better recognition)
         h, w = gray.shape
         crop_size = min(h, w) // 2
         center_y, center_x = h // 2, w // 2
         cropped = gray[center_y-crop_size:center_y+crop_size, 
                        center_x-crop_size:center_x+crop_size]
         
-        # Resize to model input
+        # Resize to model input size (28x28 for Sign Language MNIST)
         resized = cv2.resize(cropped, (IMAGE_X, IMAGE_Y))
         
         return resized
