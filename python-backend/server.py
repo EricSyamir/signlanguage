@@ -335,14 +335,43 @@ def predict_gesture(processed_image: np.ndarray) -> tuple:
 @app.on_event("startup")
 async def startup_event():
     """Load model on startup"""
-    load_keras_model()
-    load_histogram()
     print("\n" + "=" * 60)
     print("SignBridge Sign Language Interpreter API")
     print("Based on: https://github.com/harshbg/Sign-Language-Interpreter-using-Deep-Learning")
     print("=" * 60)
-    print("Server ready at: http://localhost:8000")
-    print("API docs at: http://localhost:8000/docs")
+    
+    # Print current working directory and file structure for debugging
+    print(f"Current working directory: {os.getcwd()}")
+    print(f"Script directory: {os.path.dirname(__file__)}")
+    print(f"Project root: {os.path.dirname(os.path.dirname(__file__))}")
+    
+    # List directories for debugging
+    base_dir = os.path.dirname(__file__)
+    project_root = os.path.dirname(base_dir)
+    print(f"\n📁 Directory structure:")
+    print(f"   Base dir: {base_dir}")
+    print(f"   Project root: {project_root}")
+    
+    if os.path.exists(base_dir):
+        print(f"   Contents of python-backend/: {os.listdir(base_dir)}")
+    if os.path.exists(os.path.join(base_dir, 'models')):
+        print(f"   Contents of python-backend/models/: {os.listdir(os.path.join(base_dir, 'models'))}")
+    if os.path.exists(project_root):
+        print(f"   Contents of project root: {os.listdir(project_root)}")
+    
+    print("\n" + "=" * 60)
+    print("Loading model...")
+    print("=" * 60)
+    
+    model_loaded = load_keras_model()
+    load_histogram()
+    
+    print("\n" + "=" * 60)
+    print("Server ready!")
+    print("=" * 60)
+    port = os.environ.get("PORT", "8000")
+    print(f"Server running on port: {port}")
+    print(f"Model loaded: {model_loaded}")
     print("=" * 60 + "\n")
 
 
