@@ -244,10 +244,26 @@ async function sendFrame() {
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext('2d');
     
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // MEMORY OPTIMIZATION: Resize image before processing
+    // Max dimensions: 640x480 (matches backend MAX_IMAGE_WIDTH/HEIGHT)
+    const MAX_WIDTH = 640;
+    const MAX_HEIGHT = 480;
     
+    let width = video.videoWidth;
+    let height = video.videoHeight;
+    
+    // Calculate scaling to fit within max dimensions while maintaining aspect ratio
+    if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+        const scale = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+        width = Math.floor(width * scale);
+        height = Math.floor(height * scale);
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
+    context.drawImage(video, 0, 0, width, height);
+    
+    // Use lower quality JPEG to reduce file size (0.7 = 70% quality)
     canvas.toBlob(async (blob) => {
         if (!blob) return;
         
@@ -270,13 +286,13 @@ async function sendFrame() {
             console.error('Recognition error:', error);
             // Don't stop on error, just log it
         }
-    }, 'image/jpeg', 0.8);
+    }, 'image/jpeg', 0.7); // Reduced quality from 0.8 to 0.7
 }
 
 function tryWebSocket() {
     try {
         // Use WebSocket URL based on backend URL
-        const wsUrl = BACKEND_URL.replace('http://', 'ws://').replace('https://', 'wss://') + '/ws/recognize';
+        const wsUrl = BACKEND_URL.replace('http://', 'ws://').replace('https://', 'wss://') + '/ws/stream';
         websocket = new WebSocket(wsUrl);
         
         websocket.onopen = () => {
