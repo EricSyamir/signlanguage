@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SignBridge - Sign Language Recognition Platform</title>
+    <title>SignBridge - Sign Language Interpreter</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
             </a>
             <ul class="nav-links">
                 <li><a href="index.html" class="active">Home</a></li>
-                <li><a href="recognition.html">Recognition</a></li>
+                <li><a href="recognition.html">Interpreter</a></li>
                 <li><a href="learning.html">Learning</a></li>
                 <li><a href="about.html">About</a></li>
             </ul>
@@ -23,43 +23,139 @@
 
     <div class="container">
         <section class="hero">
-            <h1>Welcome to SignBridge</h1>
-            <p>AI-Powered Sign Language Recognition with Python Backend</p>
+            <h1>Sign Language Interpreter</h1>
+            <p>Real-time sign language to text & speech interpretation using Deep Learning</p>
+            <p style="color: var(--text-light); margin-top: 1rem; font-size: 0.95rem;">
+                Based on <a href="https://github.com/harshbg/Sign-Language-Interpreter-using-Deep-Learning" target="_blank" style="color: var(--primary-color);">harshbg/Sign-Language-Interpreter-using-Deep-Learning</a>
+            </p>
             <div style="margin-top: 2rem;">
-                <a href="recognition.html" class="btn btn-primary">Start Recognition</a>
-                <a href="learning.html" class="btn btn-outline">Learn Sign Language</a>
+                <a href="recognition.html" class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 2rem;">
+                    🤟 Start Interpreting
+                </a>
+            </div>
+        </section>
+
+        <section style="margin-top: 4rem;">
+            <h2 class="section-title">How It Works</h2>
+            <div class="card-grid">
+                <div class="card text-center">
+                    <div class="card-icon">📷</div>
+                    <h3>Capture Gestures</h3>
+                    <p>Your camera captures sign language gestures in real-time</p>
+                </div>
+                <div class="card text-center">
+                    <div class="card-icon">🧠</div>
+                    <h3>CNN Deep Learning</h3>
+                    <p>A Convolutional Neural Network (TensorFlow/Keras) analyzes each frame</p>
+                </div>
+                <div class="card text-center">
+                    <div class="card-icon">📝</div>
+                    <h3>Build Sentences</h3>
+                    <p>Characters and words are combined into complete sentences</p>
+                </div>
+                <div class="card text-center">
+                    <div class="card-icon">🔊</div>
+                    <h3>Text-to-Speech</h3>
+                    <p>Interpreted sentences can be spoken aloud for communication</p>
+                </div>
             </div>
         </section>
 
         <section style="margin-top: 4rem;">
             <h2 class="section-title">Features</h2>
-            <div class="card-grid">
-                <div class="card text-center">
-                    <div class="card-icon">🤖</div>
-                    <h3>Python AI Backend</h3>
-                    <p>FastAPI-powered gesture recognition using machine learning models</p>
+            <div class="card">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                    <div>
+                        <h4>✅ 44 ASL Gestures</h4>
+                        <p style="color: var(--text-light);">A-Z letters, 0-9 numbers, plus common words</p>
+                    </div>
+                    <div>
+                        <h4>✅ Real-time Recognition</h4>
+                        <p style="color: var(--text-light);">Continuous interpretation at 200ms intervals</p>
+                    </div>
+                    <div>
+                        <h4>✅ Sentence Building</h4>
+                        <p style="color: var(--text-light);">Builds complete sentences from individual gestures</p>
+                    </div>
+                    <div>
+                        <h4>✅ Text-to-Speech</h4>
+                        <p style="color: var(--text-light);">Speak interpreted sentences out loud</p>
+                    </div>
+                    <div>
+                        <h4>✅ Python Backend</h4>
+                        <p style="color: var(--text-light);">FastAPI server with TensorFlow/Keras model</p>
+                    </div>
+                    <div>
+                        <h4>✅ >95% Accuracy</h4>
+                        <p style="color: var(--text-light);">Trained CNN model with high prediction accuracy</p>
+                    </div>
                 </div>
-                <div class="card text-center">
-                    <div class="card-icon">📷</div>
-                    <h3>Real-time Recognition</h3>
-                    <p>Use your camera for continuous gesture recognition</p>
+            </div>
+        </section>
+
+        <section style="margin-top: 4rem;">
+            <h2 class="section-title">Quick Start</h2>
+            <div class="card" style="background: var(--dark-bg); color: white;">
+                <pre style="overflow-x: auto; line-height: 1.8;">
+<span style="color: #6b7280;"># 1. Install Python dependencies</span>
+<span style="color: #10b981;">cd python-backend</span>
+<span style="color: #10b981;">pip install -r requirements.txt</span>
+
+<span style="color: #6b7280;"># 2. (Optional) Add trained model</span>
+<span style="color: #6b7280;">#    Copy cnn_model_keras2.h5 to python-backend/models/</span>
+
+<span style="color: #6b7280;"># 3. Start the backend server</span>
+<span style="color: #10b981;">python server.py</span>
+
+<span style="color: #6b7280;"># 4. Open recognition.html in your browser</span>
+<span style="color: #6b7280;">#    Or use XAMPP: http://localhost/SignLanguage/</span>
+                </pre>
+            </div>
+        </section>
+
+        <section style="margin-top: 4rem;">
+            <h2 class="section-title">Supported Gestures</h2>
+            <div class="card">
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;">
+                    <!-- Letters -->
+                    <span style="padding: 0.75rem 1rem; background: var(--light-bg); border-radius: 8px; font-weight: bold;">A</span>
+                    <span style="padding: 0.75rem 1rem; background: var(--light-bg); border-radius: 8px; font-weight: bold;">B</span>
+                    <span style="padding: 0.75rem 1rem; background: var(--light-bg); border-radius: 8px; font-weight: bold;">C</span>
+                    <span style="padding: 0.75rem 1rem; background: var(--light-bg); border-radius: 8px;">...</span>
+                    <span style="padding: 0.75rem 1rem; background: var(--light-bg); border-radius: 8px; font-weight: bold;">Z</span>
+                    <span style="padding: 0.75rem 1rem; background: var(--light-bg); border-radius: 8px; font-weight: bold;">0-9</span>
                 </div>
-                <div class="card text-center">
-                    <div class="card-icon">📚</div>
-                    <h3>Learning Resources</h3>
-                    <p>Comprehensive tutorials for ASL and MSL</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top: 1rem;">
+                    <!-- Words -->
+                    <span style="padding: 0.75rem 1rem; background: #dcfce7; border-radius: 8px; color: #166534;">Hello</span>
+                    <span style="padding: 0.75rem 1rem; background: #dcfce7; border-radius: 8px; color: #166534;">Thank You</span>
+                    <span style="padding: 0.75rem 1rem; background: #dcfce7; border-radius: 8px; color: #166534;">I Love You</span>
+                    <span style="padding: 0.75rem 1rem; background: #dcfce7; border-radius: 8px; color: #166534;">Yes</span>
+                    <span style="padding: 0.75rem 1rem; background: #dcfce7; border-radius: 8px; color: #166534;">No</span>
+                    <span style="padding: 0.75rem 1rem; background: #dcfce7; border-radius: 8px; color: #166534;">Please</span>
+                    <span style="padding: 0.75rem 1rem; background: #dcfce7; border-radius: 8px; color: #166534;">Sorry</span>
+                    <span style="padding: 0.75rem 1rem; background: #dcfce7; border-radius: 8px; color: #166534;">Help</span>
                 </div>
+            </div>
+        </section>
+
+        <section style="margin-top: 4rem;">
+            <div class="card text-center" style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white;">
+                <h2>Ready to Start?</h2>
+                <p style="margin: 1rem 0;">Begin interpreting sign language in real-time</p>
+                <a href="recognition.html" class="btn" style="background: white; color: #3b82f6; margin-top: 1rem;">
+                    Open Interpreter →
+                </a>
             </div>
         </section>
     </div>
 
     <footer>
         <div class="container">
-            <p>&copy; <span id="year"></span> SignBridge | Based on <a href="https://github.com/yumdmb/sl-recognition-v1-fe" target="_blank">github.com/yumdmb/sl-recognition-v1-fe</a></p>
+            <p>&copy; <span id="year"></span> SignBridge | Based on <a href="https://github.com/harshbg/Sign-Language-Interpreter-using-Deep-Learning" target="_blank">harshbg/Sign-Language-Interpreter-using-Deep-Learning</a></p>
         </div>
     </footer>
 
     <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
-

@@ -1,314 +1,244 @@
-# SignBridge - Sign Language Recognition Platform
+# SignBridge - Sign Language Interpreter
 
-**Python Backend + HTML/JS Frontend**  
-Based on: https://github.com/yumdmb/sl-recognition-v1-fe
+**Real-time sign language to text & speech interpretation using Deep Learning**
 
-SignBridge is a comprehensive web application for sign language learning and gesture recognition using a Python FastAPI backend with machine learning capabilities.
+Based on: https://github.com/harshbg/Sign-Language-Interpreter-using-Deep-Learning
 
-![SignBridge Logo](images/MyBIM-Logo-transparent-bg-300x227.png)
+![Python](https://img.shields.io/badge/Python-3.8+-blue)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-orange)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green)
+
+## 🎯 What This Does
+
+This web application interprets American Sign Language (ASL) gestures in real-time:
+1. **Captures** gestures via webcam
+2. **Recognizes** letters, numbers, and common words using a trained CNN
+3. **Builds sentences** from continuous gesture recognition
+4. **Speaks** the interpreted sentence using text-to-speech
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Python 3.8+** (for backend)
-- **XAMPP** (for frontend, optional - can use any HTTP server)
-- Modern web browser
+- Python 3.8+
+- Modern web browser with camera access
 
-### Setup (5 minutes)
+### 1. Install Dependencies
 
-#### 1. Start Python Backend
-
-**Windows:**
 ```bash
-# Double-click START_BACKEND.bat
-# OR run manually:
 cd python-backend
 pip install -r requirements.txt
-python server.py
 ```
 
-**Mac/Linux:**
+### 2. Start Backend Server
+
 ```bash
-cd python-backend
-pip3 install -r requirements.txt
-python3 server.py
+# Windows
+python server.py
+
+# Or double-click START_BACKEND.bat
 ```
 
-Server runs on **http://localhost:8000**
+Server starts at: http://localhost:8000
 
-#### 2. Start Frontend
+### 3. Open Frontend
 
 **Option A: XAMPP**
 ```
-1. Copy this folder to xampp/htdocs/SignLanguage/
-2. Start Apache
-3. Visit http://localhost/SignLanguage/index.html
+Place folder in xampp/htdocs/
+Visit: http://localhost/SignLanguage/
 ```
 
-**Option B: Simple HTTP Server**
+**Option B: Python HTTP Server**
 ```bash
-# Python 3
 python -m http.server 8080
-
-# Then visit http://localhost:8080
+# Visit: http://localhost:8080
 ```
 
-#### 3. Use the App
+**Option C: Direct**
+```
+Open recognition.html in browser
+```
 
-1. Open the frontend in your browser
-2. Go to Recognition page
-3. Upload an image or use camera
-4. Get real-time AI gesture recognition!
+### 4. Start Interpreting!
 
-## 🌟 Features
+1. Click "Start Interpreter"
+2. Allow camera access
+3. Make sign language gestures
+4. Watch sentences build in real-time!
 
-### 👋 Gesture Recognition (Python Backend)
-- **Upload-based Recognition**: Upload images for AI analysis
-- **Camera-based Recognition**: Real-time gesture capture
-- **Continuous Recognition**: Like the original repo - sends frames every 300ms
-- **Python FastAPI Backend**: Machine learning powered recognition
-- **Multi-language Support**: ASL and MSL
+## 📊 Supported Gestures (44 Classes)
 
-### 📚 Learning Resources
-- **9 Interactive Lessons**: Video tutorials with progress tracking
-- **Progress Tracking**: Monitor your learning journey
-- **Difficulty Levels**: Beginner, Intermediate, Advanced
-- **YouTube Integration**: Embedded video tutorials
+| Type | Gestures |
+|------|----------|
+| Letters | A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z |
+| Numbers | 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 |
+| Words | Hello, Thank You, I Love You, Yes, No, Please, Sorry, Help |
 
-## 🛠️ Technology Stack
+## 🏗️ Architecture
 
-### Backend
-- **FastAPI**: Modern Python web framework
-- **Uvicorn**: ASGI server
-- **Pillow**: Image processing
-- **NumPy**: Numerical operations
-- **TensorFlow/PyTorch**: For ML models (optional)
-
-### Frontend
-- **HTML5**: Modern semantic markup
-- **CSS3**: Custom responsive design
-- **Vanilla JavaScript**: No frameworks, lightweight
-- **Canvas API**: Image processing
-- **getUserMedia API**: Camera integration
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   BROWSER (HTML/JS)                          │
+│  - Camera capture via getUserMedia                          │
+│  - Sends frames every 200ms                                  │
+│  - Displays predictions & builds sentences                   │
+│  - Text-to-speech output                                    │
+└────────────────────────┬────────────────────────────────────┘
+                         │ HTTP POST /predict-and-build
+                         │ FormData: {file: blob, language: ASL}
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│              PYTHON BACKEND (FastAPI)                        │
+│  - Image preprocessing (histogram backprojection)           │
+│  - Hand segmentation & contour detection                    │
+│  - CNN model prediction (TensorFlow/Keras)                  │
+│  - Sentence builder (accumulates characters)                │
+│  - Returns: {label, confidence, sentence}                   │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ## 📁 Project Structure
 
 ```
 SignLanguage/
-├── index.html                 # Homepage
-├── recognition.html           # Gesture recognition page
-├── learning.html             # Learning resources
-├── about.html                # About page
-├── START_BACKEND.bat         # Windows backend starter
+├── index.html                    # Homepage
+├── recognition.html              # Main interpreter UI
+├── learning.html                 # Learning resources
+├── about.html                    # About page
+├── START_BACKEND.bat             # Windows launcher
 ├── python-backend/
-│   ├── server.py             # FastAPI server
-│   ├── requirements.txt      # Python dependencies
-│   └── README.md             # Backend documentation
+│   ├── server.py                 # FastAPI server (main logic)
+│   ├── requirements.txt          # Python dependencies
+│   ├── models/
+│   │   ├── cnn_model_keras2.h5   # Trained model (add this)
+│   │   └── hist                  # Hand histogram (optional)
+│   └── README.md
 ├── css/
-│   └── style.css             # Main stylesheet
+│   └── style.css
 ├── js/
-│   ├── main.js               # Core utilities
-│   ├── recognition.js        # Recognition (connects to Python)
-│   └── learning.js           # Learning module
-├── images/                   # Image assets
-└── data/
-    └── gestures.json         # Gesture database
+│   └── recognition.js            # Frontend recognition logic
+└── README.md
 ```
 
-## 🎯 How It Works
+## 🧠 The CNN Model
 
-### Recognition Flow
+The recognition uses a Convolutional Neural Network trained on ASL gestures:
 
+**Architecture:**
 ```
-User uploads/captures image
-        ↓
-JavaScript sends image to Python backend
-        ↓
-Python FastAPI receives at http://localhost:8000/predict-image
-        ↓
-Image preprocessed (resize to 224x224, normalize)
-        ↓
-ML Model predicts gesture
-        ↓
-Return: { "label": "Hello", "confidence": 0.95, "language": "ASL" }
-        ↓
-JavaScript displays results with confidence score
-```
-
-### Continuous Recognition
-
-In camera mode, the app sends frames to the Python backend every 300ms for real-time recognition, exactly like the original repository.
-
-## 🤖 Adding Your Own ML Model
-
-The current implementation uses simulated predictions. To add a real model:
-
-### TensorFlow Example:
-
-```python
-# In python-backend/server.py
-
-import tensorflow as tf
-
-# Load your trained model
-model = tf.keras.models.load_model('models/gesture_model.h5')
-
-# In predict_image function:
-predictions = model.predict(processed_image)
-predicted_class = np.argmax(predictions[0])
-confidence = float(predictions[0][predicted_class])
+Input: 50x50x1 (grayscale)
+  ↓
+Conv2D(16, 2x2) → MaxPool(2x2)
+  ↓
+Conv2D(32, 3x3) → MaxPool(3x3)
+  ↓
+Conv2D(64, 5x5) → MaxPool(5x5)
+  ↓
+Flatten → Dense(128) → Dropout(0.2)
+  ↓
+Output: Softmax(44 classes) → >95% accuracy
 ```
 
-### PyTorch Example:
+**To use a trained model:**
 
-```python
-import torch
-import torchvision.transforms as transforms
+1. Train using the original repository's scripts:
+   ```bash
+   git clone https://github.com/harshbg/Sign-Language-Interpreter-using-Deep-Learning.git
+   cd Sign-Language-Interpreter-using-Deep-Learning/Code
+   python set_hand_histogram.py
+   python create_gestures.py
+   python load_images.py
+   python cnn_model_train.py
+   ```
 
-# Load model
-model = torch.load('models/gesture_model.pth')
-model.eval()
+2. Copy trained files to `python-backend/models/`:
+   - `cnn_model_keras2.h5`
+   - `hist` (optional)
 
-# Predict
-with torch.no_grad():
-    output = model(tensor_image)
-    _, predicted = torch.max(output.data, 1)
+## 🔌 API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Server status |
+| `/health` | GET | Health check with model info |
+| `/predict-image` | POST | Single gesture prediction |
+| `/predict-and-build` | POST | Predict + add to sentence |
+| `/sentence` | GET | Get current sentence |
+| `/sentence/space` | POST | Add space (complete word) |
+| `/sentence/backspace` | POST | Remove last char/word |
+| `/sentence/clear` | POST | Clear sentence |
+| `/gestures` | GET | List supported gestures |
+| `/ws/recognize` | WebSocket | Real-time recognition stream |
+
+**Example Request:**
+```bash
+curl -X POST http://localhost:8000/predict-image \
+  -F "file=@gesture.jpg" \
+  -F "language=ASL"
 ```
 
-## 📖 API Documentation
-
-### POST /predict-image
-
-**Request:**
-- `file`: Image file (multipart/form-data)
-- `language`: "ASL" or "MSL"
-
-**Response:**
+**Example Response:**
 ```json
 {
   "label": "Hello",
   "confidence": 0.95,
-  "language": "ASL"
+  "language": "ASL",
+  "timestamp": "2025-01-01T00:00:00"
 }
 ```
 
-### GET /health
+## 🎮 How Sentence Building Works
 
-Check backend status:
-```json
-{
-  "status": "healthy",
-  "model_loaded": false,
-  "supported_languages": ["ASL", "MSL"]
-}
-```
-
-Interactive API docs at: http://localhost:8000/docs
-
-## 🔧 Configuration
-
-### Change Backend Port
-
-In `python-backend/server.py`:
-```python
-uvicorn.run(app, host="0.0.0.0", port=8001)  # Change 8000 to 8001
-```
-
-In `js/recognition.js`:
-```javascript
-const response = await fetch('http://localhost:8001/predict-image', {  // Update port
-```
-
-### Supported Gestures
-
-Edit gesture labels in `python-backend/server.py`:
-```python
-ASL_LABELS = ['Hello', 'Thank You', 'Please', ...]  # Add more gestures
-MSL_LABELS = ['Helo', 'Terima Kasih', 'Tolong', ...]
-```
+1. **Gesture Recognition**: Each frame is analyzed by the CNN
+2. **Confidence Threshold**: Only predictions >70% are considered
+3. **Frame Confirmation**: Same gesture must be held for ~15 frames (~3 seconds)
+4. **Character Added**: Confirmed character added to current word
+5. **Space Gesture**: Completes current word, starts new one
+6. **Sentence Complete**: Full sentence ready for text-to-speech
 
 ## 🐛 Troubleshooting
 
-### Backend Not Starting
-
-**Issue**: `ModuleNotFoundError: No module named 'fastapi'`
-
-**Solution**:
+### Backend won't start
 ```bash
+# Ensure you're in python-backend directory
 cd python-backend
 pip install -r requirements.txt
+python server.py
 ```
 
-### CORS Errors
+### No predictions / always "Error"
+- Check if model file exists: `python-backend/models/cnn_model_keras2.h5`
+- Without a model, predictions are simulated for testing
 
-**Issue**: Browser blocks requests to backend
+### Camera not working
+- Allow camera permissions in browser
+- Use HTTPS or localhost (required for getUserMedia)
+- Close other apps using the camera
 
-**Solution**: Already configured! The backend allows all origins in development. For production, update CORS settings in `server.py`.
+### CORS errors
+- Backend already has CORS enabled for all origins
+- Ensure backend is running on port 8000
 
-### Camera Not Working
-
-**Issue**: Camera permission denied
-
-**Solution**:
-1. Allow camera access in browser settings
-2. Use HTTPS or localhost (required for getUserMedia)
-3. Close other apps using the camera
-
-### Port Already in Use
-
-**Issue**: `Address already in use: 8000`
-
-**Solution**:
-- Close other apps using port 8000
-- Or change port (see Configuration above)
-
-## 📊 Gesture Labels
-
-### ASL (American Sign Language)
-Hello, Thank You, Please, Yes, No, Help, Sorry, Love, Friend, Family, Good, Bad, Happy, Sad, Hungry, Thirsty, Tired, Sleep, Eat, Drink
-
-### MSL (Malaysian Sign Language)
-Helo, Terima Kasih, Tolong, Ya, Tidak, Bantuan, Maaf, Sayang, Kawan, Keluarga, Baik, Buruk, Gembira, Sedih, Lapar, Dahaga, Letih, Tidur, Makan, Minum
-
-## 🔗 Original Repository
+## 📖 Original Repository
 
 This project is based on:
-https://github.com/yumdmb/sl-recognition-v1-fe
+**[Sign-Language-Interpreter-using-Deep-Learning](https://github.com/harshbg/Sign-Language-Interpreter-using-Deep-Learning)**
 
-Key differences:
-- Original: Next.js/React with Supabase
-- This version: Pure HTML/JS with Python backend
-- Same recognition logic and API structure
+By Harsh Gupta, Siddharth Oza, Ashish Sharma, and Manish Shukla
 
-## 🤝 Contributing
-
-This project is developed in collaboration with:
-- **Dr. Anthony Chong**
-- **The Malaysian Sign Language and Deaf Studies National Organisation (MyBIM)**
-
-## 📄 License
-
-Developed for educational purposes as part of a Final Year Project.
+Created at HackUNT-19, Winner of UNT Hackathon 2019
 
 ## 🙏 Acknowledgments
 
-- Original repository authors at https://github.com/yumdmb/sl-recognition-v1-fe
-- Dr. Anthony Chong and MyBIM for collaboration
-- The deaf and hard-of-hearing community
+- [harshbg](https://github.com/harshbg) for the original interpreter
+- TensorFlow/Keras for deep learning framework
+- OpenCV for image processing
+- FastAPI for modern Python web framework
 
-## 📞 Getting Started Checklist
+## 📄 License
 
-- [ ] Python 3.8+ installed
-- [ ] Run `pip install -r python-backend/requirements.txt`
-- [ ] Start backend: `python python-backend/server.py`
-- [ ] Backend running on http://localhost:8000
-- [ ] Start frontend (XAMPP or HTTP server)
-- [ ] Open browser to frontend URL
-- [ ] Test recognition with camera or upload
-- [ ] See "Backend is running!" success message
+MIT License - See original repository for details
 
 ---
 
-**Ready to recognize gestures?** Follow the Quick Start above! 🤟
-
-For detailed backend documentation, see: `python-backend/README.md`
+**Ready to interpret sign language?** Run `python python-backend/server.py` and open `recognition.html`! 🤟

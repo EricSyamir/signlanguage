@@ -3,20 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gesture Recognition - SignBridge</title>
+    <title>Sign Language Interpreter - SignBridge</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" href="images/MyBIM-Logo-transparent-bg-300x227.png" type="image/png">
+    <style>
+        .interpreter-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 900px) {
+            .interpreter-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .camera-section {
+            position: relative;
+        }
+        
+        .camera-section video {
+            width: 100%;
+            border-radius: 12px;
+            background: #1f2937;
+        }
+        
+        .prediction-overlay {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            right: 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .prediction-letter {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #10b981;
+        }
+        
+        .confidence-bar-container {
+            margin-top: 0.5rem;
+        }
+        
+        .sentence-display {
+            background: #1f2937;
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            min-height: 150px;
+            font-size: 1.5rem;
+            line-height: 1.8;
+        }
+        
+        .sentence-display .completed {
+            color: white;
+        }
+        
+        .sentence-display .current-word {
+            color: #fbbf24;
+            border-bottom: 2px solid #fbbf24;
+        }
+        
+        .sentence-display .cursor {
+            animation: blink 1s infinite;
+            color: #10b981;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .controls {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        
+        .gesture-hints {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .gesture-hint {
+            background: var(--light-bg);
+            padding: 0.5rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .gesture-hint.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .status-indicator.connected {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-indicator.disconnected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
 </head>
 <body>
     <header>
         <nav class="container">
             <a href="index.html" class="logo">
-                <img src="images/MyBIM-Logo-transparent-bg-300x227.png" alt="SignBridge Logo">
-                <span>SignBridge</span>
+                <span>👋 SignBridge</span>
             </a>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
-                <li><a href="recognition.html" class="active">Recognition</a></li>
+                <li><a href="recognition.html" class="active">Interpreter</a></li>
                 <li><a href="learning.html">Learning</a></li>
                 <li><a href="about.html">About</a></li>
             </ul>
@@ -24,153 +157,135 @@
     </header>
 
     <div class="container recognition-container">
-        <h1 class="section-title">Gesture Recognition</h1>
-        <p class="text-center" style="color: var(--text-light); margin-bottom: 2rem;">
-            Upload an image of a sign language gesture or use your camera for real-time recognition
+        <h1 class="section-title">Sign Language Interpreter</h1>
+        <p class="text-center" style="color: var(--text-light); margin-bottom: 1rem;">
+            Real-time sign language interpretation with sentence building
         </p>
 
-        <div class="card">
-            <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem;">
-                <button class="btn btn-primary" onclick="switchMode('upload')" id="uploadModeBtn">
-                    📤 Upload Image
-                </button>
-                <button class="btn btn-outline" onclick="switchMode('camera')" id="cameraModeBtn">
-                    📷 Use Camera
-                </button>
+        <!-- Status Bar -->
+        <div style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem;">
+            <div class="status-indicator disconnected" id="backendStatus">
+                <span class="status-dot"></span>
+                <span>Backend: Checking...</span>
             </div>
-
-            <!-- Upload Mode -->
-            <div id="uploadMode">
-                <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-                    <div class="upload-icon">📁</div>
-                    <h3>Drop an image here or click to browse</h3>
-                    <p style="color: var(--text-light); margin-top: 0.5rem;">Supports: JPG, PNG, GIF</p>
-                    <input type="file" id="fileInput" class="file-input" accept="image/*" onchange="handleFileSelect(event)">
-                </div>
+            <div class="status-indicator disconnected" id="cameraStatus">
+                <span class="status-dot"></span>
+                <span>Camera: Off</span>
             </div>
+        </div>
 
-            <!-- Camera Mode -->
-            <div id="cameraMode" class="hidden">
-                <div style="text-align: center;">
-                    <video id="camera" width="640" height="480" autoplay style="border-radius: 12px; max-width: 100%;"></video>
-                    <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-                        <button class="btn btn-primary" onclick="startCamera()" id="startCameraBtn">Start Camera</button>
-                        <button class="btn btn-secondary hidden" onclick="captureImage()" id="captureBtn">📸 Capture</button>
-                        <button class="btn btn-outline hidden" onclick="toggleContinuousRecognition()" id="continuousRecognitionBtn">🔄 Start Continuous Recognition</button>
-                        <button class="btn btn-outline hidden" onclick="stopCamera()" id="stopCameraBtn">Stop Camera</button>
-                    </div>
+        <!-- Main Interpreter UI -->
+        <div class="interpreter-container">
+            <!-- Camera Feed -->
+            <div class="card">
+                <h3 style="margin-bottom: 1rem;">📷 Camera Feed</h3>
+                <div class="camera-section">
+                    <video id="camera" autoplay playsinline></video>
+                    <canvas id="canvas" style="display: none;"></canvas>
                     
-                    <!-- Continuous Recognition Results -->
-                    <div id="continuousResultContainer" class="hidden" style="margin-top: 1rem;"></div>
+                    <!-- Prediction Overlay -->
+                    <div class="prediction-overlay" id="predictionOverlay" style="display: none;">
+                        <div class="prediction-letter" id="predictionLetter">-</div>
+                        <div class="confidence-bar-container">
+                            <div class="confidence-bar" style="margin: 0 auto; width: 200px;">
+                                <div class="confidence-fill" id="confidenceFill" style="width: 0%;"></div>
+                            </div>
+                            <div style="margin-top: 0.25rem; font-size: 0.9rem;">
+                                Confidence: <span id="confidenceText">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="startInterpreter()" id="startBtn">
+                        ▶️ Start Interpreter
+                    </button>
+                    <button class="btn btn-secondary" onclick="stopInterpreter()" id="stopBtn" style="display: none;">
+                        ⏹️ Stop
+                    </button>
                 </div>
             </div>
 
-            <!-- Preview -->
-            <div id="previewContainer" class="preview-container hidden">
-                <h3 style="margin-bottom: 1rem;">Preview</h3>
-                <img id="previewImage" class="preview-image" alt="Preview">
-                <div style="margin-top: 1rem;">
-                    <button class="btn btn-primary" onclick="analyzeGesture()">🔍 Analyze Gesture</button>
-                    <button class="btn btn-outline" onclick="clearPreview()">Clear</button>
+            <!-- Sentence Builder -->
+            <div class="card">
+                <h3 style="margin-bottom: 1rem;">📝 Interpreted Sentence</h3>
+                <div class="sentence-display" id="sentenceDisplay">
+                    <span class="completed" id="completedWords"></span>
+                    <span class="current-word" id="currentWord"></span>
+                    <span class="cursor">|</span>
                 </div>
-            </div>
-
-            <!-- Loading -->
-            <div id="loadingContainer" class="hidden">
-                <div class="spinner"></div>
-                <p class="text-center" style="color: var(--text-light);">Analyzing gesture with Python backend...</p>
-            </div>
-
-            <!-- Results -->
-            <div id="resultContainer" class="result-container hidden">
-                <h3 style="margin-bottom: 1.5rem;">Recognition Results</h3>
-                <div id="resultsList"></div>
+                
+                <div class="controls">
+                    <button class="btn btn-outline" onclick="addSpace()">
+                        ␣ Space
+                    </button>
+                    <button class="btn btn-outline" onclick="backspace()">
+                        ⌫ Backspace
+                    </button>
+                    <button class="btn btn-outline" onclick="clearSentence()">
+                        🗑️ Clear
+                    </button>
+                    <button class="btn btn-primary" onclick="speakSentence()">
+                        🔊 Speak
+                    </button>
+                    <button class="btn btn-outline" onclick="copySentence()">
+                        📋 Copy
+                    </button>
+                </div>
+                
+                <!-- Quick Word Hints -->
+                <div style="margin-top: 1.5rem;">
+                    <h4>Recent Predictions:</h4>
+                    <div class="gesture-hints" id="recentPredictions">
+                        <div class="gesture-hint">-</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- How it Works -->
-        <div style="margin-top: 3rem;">
-            <h2 class="section-title">How It Works</h2>
-            <div class="card-grid">
-                <div class="card text-center">
-                    <div class="card-icon">1️⃣</div>
-                    <h3>Upload or Capture</h3>
-                    <p>Choose an image from your device or use your camera to capture a sign language gesture</p>
-                </div>
-                <div class="card text-center">
-                    <div class="card-icon">2️⃣</div>
-                    <h3>Python AI Backend</h3>
-                    <p>Your image is sent to a Python FastAPI server running on localhost:8000 for AI analysis</p>
-                </div>
-                <div class="card text-center">
-                    <div class="card-icon">3️⃣</div>
-                    <h3>Get Results</h3>
-                    <p>Receive instant recognition results with confidence scores from the ML model</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Backend Status Info -->
-        <div class="card" style="margin-top: 2rem; background: var(--light-bg);">
-            <h3 style="margin-bottom: 1rem;">ℹ️ Backend Requirements</h3>
+        <!-- Supported Gestures Reference -->
+        <div class="card" style="margin-top: 2rem;">
+            <h3 style="margin-bottom: 1rem;">📚 Supported Gestures</h3>
             <p style="color: var(--text-light); margin-bottom: 1rem;">
-                This application requires a Python backend server to be running for gesture recognition to work.
+                Based on <a href="https://github.com/harshbg/Sign-Language-Interpreter-using-Deep-Learning" target="_blank" style="color: var(--primary-color);">Sign Language Interpreter using Deep Learning</a> - 44 ASL characters and words
             </p>
-            <div style="background: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                <strong>To start the backend:</strong>
-                <pre style="background: var(--dark-bg); color: #10b981; padding: 1rem; border-radius: 4px; margin-top: 0.5rem; overflow-x: auto;">
-# Install dependencies (first time only)
-cd python-backend
-pip install -r requirements.txt
-
-# Start the server
-python server.py
-
-# Server will run on http://localhost:8000</pre>
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <span style="padding: 0.5rem; background: var(--light-bg); border-radius: 4px;">A-Z</span>
+                <span style="padding: 0.5rem; background: var(--light-bg); border-radius: 4px;">0-9</span>
+                <span style="padding: 0.5rem; background: #dcfce7; border-radius: 4px; color: #166534;">Hello</span>
+                <span style="padding: 0.5rem; background: #dcfce7; border-radius: 4px; color: #166534;">Thank You</span>
+                <span style="padding: 0.5rem; background: #dcfce7; border-radius: 4px; color: #166534;">I Love You</span>
+                <span style="padding: 0.5rem; background: #dcfce7; border-radius: 4px; color: #166534;">Yes</span>
+                <span style="padding: 0.5rem; background: #dcfce7; border-radius: 4px; color: #166534;">No</span>
+                <span style="padding: 0.5rem; background: #dcfce7; border-radius: 4px; color: #166534;">Please</span>
+                <span style="padding: 0.5rem; background: #dcfce7; border-radius: 4px; color: #166534;">Sorry</span>
+                <span style="padding: 0.5rem; background: #dcfce7; border-radius: 4px; color: #166534;">Help</span>
             </div>
-            <p style="color: var(--text-light); font-size: 0.9rem;">
-                💡 The page will automatically detect when the backend is running and show a success message.
-            </p>
+        </div>
+
+        <!-- Instructions -->
+        <div class="card" style="margin-top: 2rem; background: var(--light-bg);">
+            <h3>💡 How to Use</h3>
+            <ol style="margin-left: 1.5rem; line-height: 2;">
+                <li><strong>Start the Python backend</strong> - Run <code>START_BACKEND.bat</code> or <code>python python-backend/server.py</code></li>
+                <li><strong>Click "Start Interpreter"</strong> to begin camera recognition</li>
+                <li><strong>Make sign language gestures</strong> in front of the camera</li>
+                <li>Hold each gesture steady for ~0.5 seconds to confirm</li>
+                <li>Use <strong>Space</strong> to complete a word, <strong>Backspace</strong> to correct</li>
+                <li>Click <strong>Speak</strong> to hear the sentence aloud</li>
+            </ol>
         </div>
     </div>
 
-    <canvas id="canvas" style="display: none;"></canvas>
-
     <footer>
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>SignBridge</h3>
-                    <p>A comprehensive platform for learning and recognizing sign language. Making communication accessible for everyone.</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Quick Links</h3>
-                    <a href="index.html">Home</a>
-                    <a href="recognition.html">Gesture Recognition</a>
-                    <a href="learning.html">Learning Resources</a>
-                    <a href="about.html">About Us</a>
-                </div>
-                <div class="footer-section">
-                    <h3>Resources</h3>
-                    <a href="learning.html">Tutorials</a>
-                    <a href="learning.html">Practice Materials</a>
-                    <a href="learning.html">Sign Language Dictionary</a>
-                </div>
-                <div class="footer-section">
-                    <h3>About</h3>
-                    <p>Developed in collaboration with Dr. Anthony Chong and The Malaysian Sign Language and Deaf Studies National Organisation (MyBIM).</p>
-                    <p style="margin-top: 1rem;"><small>Based on: <a href="https://github.com/yumdmb/sl-recognition-v1-fe" target="_blank" style="color: var(--primary-color);">github.com/yumdmb/sl-recognition-v1-fe</a></small></p>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; <span id="current-year"></span> SignBridge. Developed for educational purposes. All rights reserved.</p>
-            </div>
+            <p>&copy; <span id="year"></span> SignBridge | Based on <a href="https://github.com/harshbg/Sign-Language-Interpreter-using-Deep-Learning" target="_blank">harshbg/Sign-Language-Interpreter-using-Deep-Learning</a></p>
         </div>
     </footer>
 
-    <script src="js/main.js"></script>
     <script src="js/recognition.js"></script>
-    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
-
