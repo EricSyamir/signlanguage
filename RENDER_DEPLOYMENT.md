@@ -14,9 +14,16 @@ SignBridge requires two services on Render:
 - Render account (free tier works)
 - Trained model file (optional, but recommended)
 
+## Quick Start (Simplified)
+
+For a simpler deployment with one service:
+
+1. **Use `render-simple.yaml`** (single service)
+2. **Or use `render.yaml`** (two services - backend + frontend)
+
 ## Deployment Steps
 
-### Option 1: Using render.yaml (Recommended)
+### Option 1: Using render.yaml (Two Services - Recommended)
 
 1. **Push code to GitHub**
    ```bash
@@ -41,7 +48,32 @@ SignBridge requires two services on Render:
    - If you have a trained model, upload it via Render's file system or use environment variables
    - Or use Render's persistent disk feature
 
-### Option 2: Manual Setup
+### Option 2: Using render-simple.yaml (Single Service - Simpler)
+
+1. **Rename file**:
+   ```bash
+   mv render-simple.yaml render.yaml
+   ```
+
+2. **Push to GitHub**:
+   ```bash
+   git add render.yaml
+   git commit -m "Add Render deployment"
+   git push origin master
+   ```
+
+3. **Deploy on Render**:
+   - Go to Render Dashboard
+   - Click "New +" → "Blueprint"
+   - Connect repository
+   - Render will auto-detect `render.yaml`
+   - Click "Apply"
+
+4. **Access**:
+   - Backend API: `https://signbridge.onrender.com`
+   - Frontend: Serve static files from backend or use a CDN
+
+### Option 3: Manual Setup
 
 #### Backend Service
 
