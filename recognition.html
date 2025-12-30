@@ -270,13 +270,18 @@
         <div class="card" style="margin-top: 2rem; background: var(--light-bg);">
             <h3>💡 How to Use</h3>
             <ol style="margin-left: 1.5rem; line-height: 2;">
+                <li><strong>Upload Model File</strong> - Place <code>sign_language_cnn_model.h5</code> in <code>python-backend/models/</code></li>
                 <li><strong>Start the Python backend</strong> - Run <code>START_BACKEND.bat</code> or <code>python python-backend/server.py</code></li>
+                <li><strong>Wait for "Model: Loaded ✓"</strong> status indicator (green) - Interpreter will be disabled until model loads</li>
                 <li><strong>Click "Start Interpreter"</strong> to begin camera recognition</li>
                 <li><strong>Make sign language gestures</strong> in front of the camera</li>
                 <li>Hold each gesture steady for ~0.5 seconds to confirm</li>
                 <li>Use <strong>Space</strong> to complete a word, <strong>Backspace</strong> to correct</li>
                 <li>Click <strong>Speak</strong> to hear the sentence aloud</li>
             </ol>
+            <div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                <strong>⚠️ Important:</strong> The interpreter requires a trained model file to work. Without it, recognition features will be disabled.
+            </div>
         </div>
     </div>
 
