@@ -42,6 +42,7 @@ let recognitionInterval = null;
 let isRunning = false;
 let recentPredictions = [];
 let websocket = null;
+let modelLoaded = false; // Track if model is loaded
 
 // ============================================================
 // Initialization
@@ -52,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUI();
 });
 
-// Check backend connection
+// Check backend connection and model status
 async function checkBackendStatus() {
     const statusEl = document.getElementById('backendStatus');
     
@@ -60,15 +61,31 @@ async function checkBackendStatus() {
         const response = await fetch(`${BACKEND_URL}/health`);
         if (response.ok) {
             const data = await response.json();
+            modelLoaded = data.model_loaded || false;
+            
             statusEl.classList.remove('disconnected');
-            statusEl.classList.add('connected');
-            statusEl.innerHTML = `
-                <span class="status-dot"></span>
-                <span>Backend: Connected ${data.model_loaded ? '(Model ✓)' : '(No Model)'}</span>
-            `;
-            console.log('Backend status:', data);
+            if (modelLoaded) {
+                statusEl.classList.add('connected');
+                statusEl.innerHTML = `
+                    <span class="status-dot"></span>
+                    <span>Backend: Connected ✓ Model: Loaded ✓</span>
+                `;
+                console.log('Backend status:', data);
+                // Enable UI when model is loaded
+                enableInterpreterUI();
+            } else {
+                statusEl.classList.add('disconnected');
+                statusEl.innerHTML = `
+                    <span class="status-dot"></span>
+                    <span>Backend: Connected ✗ Model: Not Loaded</span>
+                `;
+                console.warn('Backend connected but model not loaded');
+                // Disable UI when model is not loaded
+                disableInterpreterUI('Model not loaded. Please upload model file to python-backend/models/');
+            }
         }
     } catch (error) {
+        modelLoaded = false;
         statusEl.classList.remove('connected');
         statusEl.classList.add('disconnected');
         statusEl.innerHTML = `
@@ -76,7 +93,48 @@ async function checkBackendStatus() {
             <span>Backend: Not Connected</span>
         `;
         console.log('Backend not available:', error.message);
+        disableInterpreterUI('Backend not available. Please ensure the server is running.');
     }
+}
+
+// Enable interpreter UI when model is loaded
+function enableInterpreterUI() {
+    const startBtn = document.getElementById('startBtn');
+    if (startBtn) {
+        startBtn.disabled = false;
+        startBtn.style.opacity = '1';
+        startBtn.style.cursor = 'pointer';
+    }
+    
+    // Hide error message if shown
+    const errorMsg = document.getElementById('modelErrorMsg');
+    if (errorMsg) {
+        errorMsg.style.display = 'none';
+    }
+}
+
+// Disable interpreter UI when model is not loaded
+function disableInterpreterUI(message) {
+    const startBtn = document.getElementById('startBtn');
+    if (startBtn) {
+        startBtn.disabled = true;
+        startBtn.style.opacity = '0.5';
+        startBtn.style.cursor = 'not-allowed';
+    }
+    
+    // Show error message
+    let errorMsg = document.getElementById('modelErrorMsg');
+    if (!errorMsg) {
+        errorMsg = document.createElement('div');
+        errorMsg.id = 'modelErrorMsg';
+        errorMsg.style.cssText = 'background: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 8px; margin: 1rem 0; text-align: center;';
+        const controlsDiv = document.querySelector('.controls');
+        if (controlsDiv) {
+            controlsDiv.parentNode.insertBefore(errorMsg, controlsDiv);
+        }
+    }
+    errorMsg.innerHTML = `<strong>⚠️ ${message}</strong><br><small>Upload model file to: python-backend/models/sign_language_cnn_model.h5</small>`;
+    errorMsg.style.display = 'block';
 }
 
 // ============================================================

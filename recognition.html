@@ -198,13 +198,14 @@
                 </div>
                 
                 <div class="controls">
-                    <button class="btn btn-primary" onclick="startInterpreter()" id="startBtn">
+                    <button class="btn btn-primary" onclick="startInterpreter()" id="startBtn" disabled>
                         ▶️ Start Interpreter
                     </button>
                     <button class="btn btn-secondary" onclick="stopInterpreter()" id="stopBtn" style="display: none;">
                         ⏹️ Stop
                     </button>
                 </div>
+                <div id="modelErrorMsg" style="display: none;"></div>
             </div>
 
             <!-- Sentence Builder -->
