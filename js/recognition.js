@@ -5,8 +5,37 @@
  * Real-time sign language interpretation with sentence building
  */
 
-const BACKEND_URL = 'http://localhost:8000';
-const FRAME_INTERVAL = 200; // Send frame every 200ms
+// Detect backend URL dynamically
+function getBackendURL() {
+    // Check for explicit backend URL in config
+    if (window.SignBridgeConfig && window.SignBridgeConfig.BACKEND_URL) {
+        return window.SignBridgeConfig.BACKEND_URL;
+    }
+    
+    if (window.BACKEND_URL) {
+        return window.BACKEND_URL;
+    }
+    
+    // Local development
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'http://localhost:8000';
+    }
+    
+    // Render deployment - replace frontend with backend in hostname
+    const hostname = window.location.hostname;
+    if (hostname.includes('signbridge-frontend') || hostname.includes('onrender.com')) {
+        return 'https://' + hostname.replace('signbridge-frontend', 'signbridge-backend');
+    }
+    
+    // Default: same origin (if backend and frontend are on same domain)
+    return window.location.origin.replace(':8080', ':8000').replace(':3000', ':8000');
+}
+
+const BACKEND_URL = getBackendURL();
+const FRAME_INTERVAL = (window.SignBridgeConfig && window.SignBridgeConfig.FRAME_INTERVAL) || 200;
+
+console.log('SignBridge initialized');
+console.log('Backend URL:', BACKEND_URL);
 
 let stream = null;
 let recognitionInterval = null;
@@ -187,7 +216,9 @@ async function sendFrame() {
 
 function tryWebSocket() {
     try {
-        websocket = new WebSocket(`ws://localhost:8000/ws/recognize`);
+        // Use WebSocket URL based on backend URL
+        const wsUrl = BACKEND_URL.replace('http://', 'ws://').replace('https://', 'wss://') + '/ws/recognize';
+        websocket = new WebSocket(wsUrl);
         
         websocket.onopen = () => {
             console.log('WebSocket connected');
