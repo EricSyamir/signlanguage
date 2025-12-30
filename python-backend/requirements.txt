@@ -1,5 +1,5 @@
 # SignBridge Sign Language Interpreter - Python Dependencies
-# Compatible with Python 3.11
+# Using sign-language-translator library: https://pypi.org/project/sign-language-translator/
 
 # Core web framework
 fastapi==0.109.0
@@ -7,15 +7,12 @@ uvicorn[standard]==0.27.0
 python-multipart==0.0.6
 websockets==12.0
 
-# Image processing - Updated versions for compatibility
+# Image processing
 opencv-python-headless==4.9.0.80
 Pillow>=10.3.0
 numpy==1.26.3
 
-# Machine Learning - TensorFlow/Keras
-# Using tensorflow-cpu for better compatibility
-tensorflow-cpu==2.15.0
-
-# For model training (optional)
-scikit-learn==1.4.0
-h5py==3.10.0
+# Sign Language Translation Library
+# Full-featured library for sign language translation
+# https://github.com/sign-language-translator/sign-language-translator
+sign-language-translator[mediapipe]==0.8.1
