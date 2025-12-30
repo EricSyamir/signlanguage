@@ -1,3 +1,0 @@
--- Placeholder for migration 20250613000002_add_forum_foreign_keys.sql
--- The actual schema changes for this migration are already applied to the database.
--- This file is created temporarily to allow 'supabase migration repair --status applied' to run.
