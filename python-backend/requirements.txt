@@ -1,5 +1,5 @@
 # SignBridge Sign Language Interpreter - Python Dependencies
-# Based on: https://github.com/harshbg/Sign-Language-Interpreter-using-Deep-Learning
+# Compatible with Python 3.11
 
 # Core web framework
 fastapi==0.109.0
@@ -7,15 +7,14 @@ uvicorn[standard]==0.27.0
 python-multipart==0.0.6
 websockets==12.0
 
-# Image processing
-opencv-python==4.9.0.80
-Pillow==10.2.0
+# Image processing - Updated versions for compatibility
+opencv-python-headless==4.9.0.80
+Pillow>=10.3.0
 numpy==1.26.3
 
 # Machine Learning - TensorFlow/Keras
-tensorflow==2.15.0
-# OR use tensorflow-cpu for machines without GPU:
-# tensorflow-cpu==2.15.0
+# Using tensorflow-cpu for better compatibility
+tensorflow-cpu==2.15.0
 
 # For model training (optional)
 scikit-learn==1.4.0
