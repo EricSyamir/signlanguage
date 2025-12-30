@@ -40,10 +40,19 @@ app.add_middleware(
 # Serve static files (for single-service deployment on Render)
 static_dir = os.path.join(os.path.dirname(__file__), '..')
 if os.path.exists(os.path.join(static_dir, 'index.html')):
-    # Mount static assets
-    app.mount("/css", StaticFiles(directory=os.path.join(static_dir, 'css')), name="css")
-    app.mount("/js", StaticFiles(directory=os.path.join(static_dir, 'js')), name="js")
-    app.mount("/images", StaticFiles(directory=os.path.join(static_dir, 'images')), name="images")
+    # Mount static assets only if directories exist
+    css_dir = os.path.join(static_dir, 'css')
+    js_dir = os.path.join(static_dir, 'js')
+    images_dir = os.path.join(static_dir, 'images')
+    
+    if os.path.exists(css_dir):
+        app.mount("/css", StaticFiles(directory=css_dir), name="css")
+    
+    if os.path.exists(js_dir):
+        app.mount("/js", StaticFiles(directory=js_dir), name="js")
+    
+    if os.path.exists(images_dir):
+        app.mount("/images", StaticFiles(directory=images_dir), name="images")
     
     # Serve HTML pages
     @app.get("/")
@@ -61,6 +70,14 @@ if os.path.exists(os.path.join(static_dir, 'index.html')):
     @app.get("/about.html")
     async def serve_about():
         return FileResponse(os.path.join(static_dir, 'about.html'))
+    
+    # Serve config.js
+    @app.get("/config.js")
+    async def serve_config():
+        config_path = os.path.join(static_dir, 'config.js')
+        if os.path.exists(config_path):
+            return FileResponse(config_path)
+        return JSONResponse({"error": "config.js not found"}, status_code=404)
 
 # ============================================================
 # Model Configuration
