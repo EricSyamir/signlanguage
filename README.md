@@ -139,21 +139,63 @@ Flatten → Dense(128) → Dropout(0.2)
 Output: Softmax(44 classes) → >95% accuracy
 ```
 
-**To use a trained model:**
+## 🎓 Training Your Own Model
 
-1. Train using the original repository's scripts:
+**Complete training pipeline included!**
+
+### Quick Start Training:
+
+```bash
+cd python-backend/training
+
+# Windows - Easy way:
+START_TRAINING.bat
+
+# Or manually:
+python train_all.py
+```
+
+### Step-by-Step Training:
+
+1. **Set Hand Histogram** (one-time setup):
    ```bash
-   git clone https://github.com/harshbg/Sign-Language-Interpreter-using-Deep-Learning.git
-   cd Sign-Language-Interpreter-using-Deep-Learning/Code
    python set_hand_histogram.py
+   ```
+   - Place hand in green squares
+   - Press 'C' to capture
+   - Press 'S' to save
+
+2. **Capture Gestures** (for each gesture):
+   ```bash
    python create_gestures.py
+   ```
+   - Enter gesture ID (0-43)
+   - Enter gesture name (e.g., "A", "Hello")
+   - Press 'C' to start capturing
+   - Captures 1200 images automatically
+
+3. **Load Images**:
+   ```bash
    python load_images.py
+   ```
+   - Prepares train/validation/test sets
+
+4. **Train Model**:
+   ```bash
    python cnn_model_train.py
    ```
+   - Trains CNN (takes 30-60 minutes)
+   - Saves to `models/cnn_model_keras2.h5`
 
-2. Copy trained files to `python-backend/models/`:
-   - `cnn_model_keras2.h5`
-   - `hist` (optional)
+**See `python-backend/training/TRAINING_GUIDE.md` for detailed instructions.**
+
+### Using Pre-trained Model:
+
+If you have a trained model from the original repository:
+
+1. Copy `cnn_model_keras2.h5` to `python-backend/models/`
+2. Copy `hist` to `python-backend/models/` (optional)
+3. Start the server - it will automatically load the model
 
 ## 🔌 API Endpoints
 
