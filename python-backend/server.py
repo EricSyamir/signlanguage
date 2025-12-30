@@ -1,12 +1,19 @@
 """
 SignBridge Sign Language Interpreter API
 Using sign-language-translator library: https://pypi.org/project/sign-language-translator/
+
+MEMORY OPTIMIZED VERSION
+- Image resizing before processing
+- Garbage collection
+- Lazy model loading
+- Memory-efficient operations
 """
 
 import os
 import io
 import base64
 import asyncio
+import gc  # Garbage collection
 from datetime import datetime
 from typing import Optional
 import json
@@ -34,13 +41,26 @@ except ImportError as e:
     print("   Install with: pip install sign-language-translator[mediapipe]")
 
 # ============================================================
+# Memory Optimization Settings
+# ============================================================
+
+# Maximum image dimensions (reduce memory usage)
+MAX_IMAGE_WIDTH = 640
+MAX_IMAGE_HEIGHT = 480
+MAX_IMAGE_SIZE_MB = 5  # Maximum image size in MB
+
+# Processing settings
+IMAGE_QUALITY = 85  # JPEG quality (lower = less memory)
+
+
+# ============================================================
 # FastAPI App Setup
 # ============================================================
 
 app = FastAPI(
     title="SignBridge Sign Language Interpreter",
     description="Real-time sign language to text translation using sign-language-translator library",
-    version="3.0.0"
+    version="3.1.0-memory-optimized"
 )
 
 # CORS for frontend access
@@ -57,11 +77,12 @@ app.add_middleware(
 # Global Variables
 # ============================================================
 
-# Sign language models
+# Sign language models (lazy loaded)
 video_embedding_model = None
 sign_to_text_model = None
 text_to_sign_model = None
 translator_ready = False
+_model_loading_lock = asyncio.Lock()
 
 
 # ============================================================
@@ -76,7 +97,7 @@ class SentenceBuilder:
         self.current_sentence = []
         self.last_prediction = None
         self.same_frame_count = 0
-        self.history = []
+        # Removed history to save memory
         
     def add_prediction(self, label: str, confidence: float) -> dict:
         """Add a prediction and build sentence"""
@@ -135,73 +156,141 @@ sentence_builder = SentenceBuilder()
 
 
 # ============================================================
-# Model Loading
+# Memory-Efficient Image Processing
 # ============================================================
 
-def load_slt_models():
-    """Load sign-language-translator models"""
-    global video_embedding_model, sign_to_text_model, text_to_sign_model, translator_ready
+def resize_image_if_needed(img: np.ndarray) -> np.ndarray:
+    """Resize image if it's too large to save memory"""
+    height, width = img.shape[:2]
+    
+    if width > MAX_IMAGE_WIDTH or height > MAX_IMAGE_HEIGHT:
+        # Calculate scaling factor
+        scale = min(MAX_IMAGE_WIDTH / width, MAX_IMAGE_HEIGHT / height)
+        new_width = int(width * scale)
+        new_height = int(height * scale)
+        
+        # Resize using INTER_AREA (best for downscaling)
+        img = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_AREA)
+    
+    return img
+
+
+def optimize_image_memory(image_bytes: bytes) -> tuple:
+    """
+    Optimize image for memory efficiency
+    Returns: (optimized_image_array, original_size_mb, optimized_size_mb)
+    """
+    original_size_mb = len(image_bytes) / (1024 * 1024)
+    
+    # Check size limit
+    if original_size_mb > MAX_IMAGE_SIZE_MB:
+        raise ValueError(f"Image too large: {original_size_mb:.2f}MB (max: {MAX_IMAGE_SIZE_MB}MB)")
+    
+    # Decode image
+    nparr = np.frombuffer(image_bytes, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+    if img is None:
+        raise ValueError("Failed to decode image")
+    
+    # Resize if needed
+    img = resize_image_if_needed(img)
+    
+    # Convert BGR to RGB (MediaPipe expects RGB)
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+    optimized_size_mb = img_rgb.nbytes / (1024 * 1024)
+    
+    return img_rgb, original_size_mb, optimized_size_mb
+
+
+# ============================================================
+# Model Loading (Lazy Loading)
+# ============================================================
+
+async def ensure_model_loaded():
+    """Ensure MediaPipe model is loaded (lazy loading)"""
+    global video_embedding_model, translator_ready
+    
+    if video_embedding_model is not None:
+        return True
     
     if not SLT_AVAILABLE:
-        print("⚠️ SLT library not available")
         return False
     
-    try:
-        print("📦 Loading sign-language-translator models...")
+    async with _model_loading_lock:
+        # Double-check after acquiring lock
+        if video_embedding_model is not None:
+            return True
         
-        # Disable download progress bars for cleaner logs
-        Settings.SHOW_DOWNLOAD_PROGRESS = False
-        
-        # Load video embedding model (for extracting features from video/images)
-        print("   Loading video embedding model...")
-        video_embedding_model = slt.models.MediaPipeLandmarksModel()
-        print("   ✓ Video embedding model loaded")
-        
-        # Note: Full translation models are larger and may need separate download
-        # For now, we'll use the embedding model for gesture detection
-        
-        translator_ready = True
-        print("✅ SLT models loaded successfully!")
-        return True
-        
-    except Exception as e:
-        print(f"❌ Error loading SLT models: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
+        try:
+            print("📦 Loading MediaPipe model (lazy loading)...")
+            Settings.SHOW_DOWNLOAD_PROGRESS = False
+            video_embedding_model = slt.models.MediaPipeLandmarksModel()
+            translator_ready = True
+            print("✅ MediaPipe model loaded!")
+            return True
+        except Exception as e:
+            print(f"❌ Error loading model: {e}")
+            return False
 
 
-def extract_landmarks(image_bytes) -> Optional[dict]:
-    """Extract pose landmarks from image using MediaPipe"""
-    global video_embedding_model
+def load_slt_models():
+    """Load sign-language-translator models (called on startup)"""
+    # Don't load immediately - use lazy loading instead
+    print("📦 Models will be loaded on first use (lazy loading)")
+    return True
+
+
+# ============================================================
+# Landmark Extraction (Memory Optimized)
+# ============================================================
+
+async def extract_landmarks(image_bytes: bytes) -> Optional[dict]:
+    """Extract pose landmarks from image using MediaPipe (memory optimized)"""
     
-    if video_embedding_model is None:
+    # Ensure model is loaded
+    if not await ensure_model_loaded():
         return None
     
     try:
-        # Convert bytes to numpy array
-        nparr = np.frombuffer(image_bytes, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        # Optimize image memory
+        img_rgb, orig_size, opt_size = optimize_image_memory(image_bytes)
         
-        if img is None:
-            return None
-        
-        # Convert BGR to RGB
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        
-        # Get landmarks
+        # Extract landmarks
         landmarks = video_embedding_model.embed(img_rgb)
         
-        if landmarks is not None and len(landmarks) > 0:
+        # Clear image from memory immediately
+        del img_rgb
+        gc.collect()  # Force garbage collection
+        
+        if landmarks is not None:
+            # Convert to list efficiently (don't keep numpy array)
+            if hasattr(landmarks, 'tolist'):
+                landmarks_list = landmarks.tolist()
+            elif isinstance(landmarks, np.ndarray):
+                landmarks_list = landmarks.tolist()
+            else:
+                landmarks_list = list(landmarks)
+            
+            # Clear landmarks numpy array
+            del landmarks
+            gc.collect()
+            
             return {
-                "landmarks": landmarks.tolist() if hasattr(landmarks, 'tolist') else landmarks,
-                "detected": True
+                "landmarks": landmarks_list,
+                "detected": len(landmarks_list) > 0
             }
         
         return {"detected": False}
         
+    except ValueError as e:
+        print(f"Image processing error: {e}")
+        return None
     except Exception as e:
         print(f"Error extracting landmarks: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
@@ -234,7 +323,8 @@ def predict_from_landmarks(landmarks_data: dict) -> tuple:
 async def startup_event():
     """Load models on startup"""
     print("\n" + "=" * 60)
-    print("SignBridge Sign Language Interpreter API v3.0")
+    print("SignBridge Sign Language Interpreter API v3.1")
+    print("Memory-Optimized Version")
     print("Using: sign-language-translator library")
     print("https://pypi.org/project/sign-language-translator/")
     print("=" * 60)
@@ -243,19 +333,21 @@ async def startup_event():
     print(f"Current working directory: {os.getcwd()}")
     print(f"Script directory: {os.path.dirname(__file__)}")
     print(f"SLT library available: {SLT_AVAILABLE}")
+    print(f"Max image size: {MAX_IMAGE_WIDTH}x{MAX_IMAGE_HEIGHT}")
+    print(f"Max image file size: {MAX_IMAGE_SIZE_MB}MB")
     
     print("\n" + "=" * 60)
-    print("Loading models...")
+    print("Initializing (models will load on first use)...")
     print("=" * 60)
     
-    models_loaded = load_slt_models()
+    models_ready = load_slt_models()
     
     print("\n" + "=" * 60)
     print("Server ready!")
     print("=" * 60)
     port = os.environ.get("PORT", "8000")
     print(f"Server running on port: {port}")
-    print(f"Translator ready: {models_loaded}")
+    print(f"Lazy loading enabled: {models_ready}")
     print("=" * 60 + "\n")
 
 
@@ -270,7 +362,8 @@ async def health_check():
         "status": "healthy",
         "slt_available": SLT_AVAILABLE,
         "model_loaded": translator_ready,
-        "version": "3.0.0"
+        "version": "3.1.0-memory-optimized",
+        "memory_optimized": True
     }
 
 
@@ -280,15 +373,18 @@ async def api_status():
     return {
         "service": "SignBridge Sign Language Interpreter",
         "status": "running",
-        "version": "3.0.0",
+        "version": "3.1.0-memory-optimized",
         "library": "sign-language-translator",
         "library_version": slt.__version__ if SLT_AVAILABLE else "not installed",
         "model_loaded": translator_ready,
+        "memory_optimized": True,
+        "max_image_size": f"{MAX_IMAGE_WIDTH}x{MAX_IMAGE_HEIGHT}",
         "features": [
             "Real-time sign detection",
             "MediaPipe landmarks extraction",
             "Sentence building",
-            "WebSocket streaming"
+            "WebSocket streaming",
+            "Memory optimized"
         ]
     }
 
@@ -299,13 +395,17 @@ async def predict_image(
     language: str = Form("ASL")
 ):
     """
-    Predict gesture from a single image
+    Predict gesture from a single image (memory optimized)
     """
     try:
         contents = await file.read()
         
-        # Extract landmarks
-        landmarks_data = extract_landmarks(contents)
+        # Extract landmarks (with memory optimization)
+        landmarks_data = await extract_landmarks(contents)
+        
+        # Clear contents from memory
+        del contents
+        gc.collect()
         
         if landmarks_data:
             label, confidence = predict_from_landmarks(landmarks_data)
@@ -320,6 +420,11 @@ async def predict_image(
             "timestamp": datetime.now().isoformat()
         }
         
+    except ValueError as e:
+        return JSONResponse(
+            status_code=400,
+            content={"error": str(e), "label": "Error", "confidence": 0.0}
+        )
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -333,13 +438,17 @@ async def predict_and_build(
     language: str = Form("ASL")
 ):
     """
-    Predict gesture and add to sentence builder
+    Predict gesture and add to sentence builder (memory optimized)
     """
     try:
         contents = await file.read()
         
-        # Extract landmarks
-        landmarks_data = extract_landmarks(contents)
+        # Extract landmarks (with memory optimization)
+        landmarks_data = await extract_landmarks(contents)
+        
+        # Clear contents from memory
+        del contents
+        gc.collect()
         
         if landmarks_data:
             label, confidence = predict_from_landmarks(landmarks_data)
@@ -358,6 +467,11 @@ async def predict_and_build(
             "timestamp": datetime.now().isoformat()
         }
         
+    except ValueError as e:
+        return JSONResponse(
+            status_code=400,
+            content={"error": str(e)}
+        )
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -369,13 +483,14 @@ async def predict_and_build(
 async def clear_sentence():
     """Clear the current sentence"""
     sentence_builder.clear()
+    gc.collect()  # Clean up memory
     return {"status": "cleared", "sentence_state": sentence_builder.get_state()}
 
 
 @app.websocket("/ws/stream")
 async def websocket_stream(websocket: WebSocket):
     """
-    WebSocket endpoint for real-time video streaming
+    WebSocket endpoint for real-time video streaming (memory optimized)
     """
     await websocket.accept()
     print("WebSocket client connected")
@@ -396,8 +511,12 @@ async def websocket_stream(websocket: WebSocket):
                     
                     image_bytes = base64.b64decode(image_data)
                     
-                    # Extract landmarks
-                    landmarks_data = extract_landmarks(image_bytes)
+                    # Extract landmarks (with memory optimization)
+                    landmarks_data = await extract_landmarks(image_bytes)
+                    
+                    # Clear image_bytes from memory
+                    del image_bytes
+                    gc.collect()
                     
                     if landmarks_data:
                         label, confidence = predict_from_landmarks(landmarks_data)
@@ -417,8 +536,12 @@ async def websocket_stream(websocket: WebSocket):
                         "timestamp": datetime.now().isoformat()
                     })
                     
+                    # Periodic garbage collection
+                    gc.collect()
+                    
                 elif message.get("type") == "clear":
                     sentence_builder.clear()
+                    gc.collect()
                     await websocket.send_json({
                         "type": "cleared",
                         "sentence_state": sentence_builder.get_state()
@@ -426,9 +549,12 @@ async def websocket_stream(websocket: WebSocket):
                     
             except json.JSONDecodeError:
                 await websocket.send_json({"error": "Invalid JSON"})
+            except ValueError as e:
+                await websocket.send_json({"error": f"Image error: {str(e)}"})
                 
     except WebSocketDisconnect:
         print("WebSocket client disconnected")
+        gc.collect()  # Clean up on disconnect
 
 
 # ============================================================
@@ -448,12 +574,6 @@ async def text_to_sign(text: str = Form(...), language: str = Form("pk-sl")):
         )
     
     try:
-        # Use rule-based translation
-        # Available languages: pk-sl (Pakistan), others based on what's installed
-        
-        # For now, return a structured response
-        # Full implementation would use slt.models.ConcatenativeSynthesis
-        
         words = text.strip().split()
         
         return {
@@ -528,5 +648,5 @@ async def serve_about():
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
-    print(f"Starting server on port {port}...")
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    print(f"Starting memory-optimized server on port {port}...")
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
