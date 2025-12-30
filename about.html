@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - SignBridge</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="index.html" class="logo">
+                <span>👋 SignBridge</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="recognition.html">Recognition</a></li>
+                <li><a href="learning.html">Learning</a></li>
+                <li><a href="about.html" class="active">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1 class="section-title">About SignBridge</h1>
+        
+        <div class="card">
+            <h2>Our Mission</h2>
+            <p>SignBridge is a comprehensive platform for learning and recognizing sign language using AI-powered technology.</p>
+            
+            <h3 style="margin-top: 2rem;">Technology Stack</h3>
+            <ul>
+                <li><strong>Backend:</strong> Python FastAPI with Machine Learning</li>
+                <li><strong>Frontend:</strong> HTML, CSS, JavaScript</li>
+                <li><strong>Recognition:</strong> TensorFlow/PyTorch (configurable)</li>
+            </ul>
+
+            <h3 style="margin-top: 2rem;">Acknowledgments</h3>
+            <p>Developed in collaboration with Dr. Anthony Chong and The Malaysian Sign Language and Deaf Studies National Organisation (MyBIM).</p>
+            
+            <p style="margin-top: 1rem;">
+                <strong>Original Repository:</strong> 
+                <a href="https://github.com/yumdmb/sl-recognition-v1-fe" target="_blank" style="color: #3b82f6;">
+                    github.com/yumdmb/sl-recognition-v1-fe
+                </a>
+            </p>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="year"></span> SignBridge | Based on <a href="https://github.com/yumdmb/sl-recognition-v1-fe" target="_blank">github.com/yumdmb/sl-recognition-v1-fe</a></p>
+        </div>
+    </footer>
+
+    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
+

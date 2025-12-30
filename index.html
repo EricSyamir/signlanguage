@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignBridge - Sign Language Recognition Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="index.html" class="logo">
+                <span>👋 SignBridge</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="recognition.html">Recognition</a></li>
+                <li><a href="learning.html">Learning</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <h1>Welcome to SignBridge</h1>
+            <p>AI-Powered Sign Language Recognition with Python Backend</p>
+            <div style="margin-top: 2rem;">
+                <a href="recognition.html" class="btn btn-primary">Start Recognition</a>
+                <a href="learning.html" class="btn btn-outline">Learn Sign Language</a>
+            </div>
+        </section>
+
+        <section style="margin-top: 4rem;">
+            <h2 class="section-title">Features</h2>
+            <div class="card-grid">
+                <div class="card text-center">
+                    <div class="card-icon">🤖</div>
+                    <h3>Python AI Backend</h3>
+                    <p>FastAPI-powered gesture recognition using machine learning models</p>
+                </div>
+                <div class="card text-center">
+                    <div class="card-icon">📷</div>
+                    <h3>Real-time Recognition</h3>
+                    <p>Use your camera for continuous gesture recognition</p>
+                </div>
+                <div class="card text-center">
+                    <div class="card-icon">📚</div>
+                    <h3>Learning Resources</h3>
+                    <p>Comprehensive tutorials for ASL and MSL</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="year"></span> SignBridge | Based on <a href="https://github.com/yumdmb/sl-recognition-v1-fe" target="_blank">github.com/yumdmb/sl-recognition-v1-fe</a></p>
+        </div>
+    </footer>
+
+    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
+

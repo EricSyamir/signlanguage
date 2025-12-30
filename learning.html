@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Resources - SignBridge</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="index.html" class="logo">
+                <span>👋 SignBridge</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="recognition.html">Recognition</a></li>
+                <li><a href="learning.html" class="active">Learning</a></li>
+                <li><a href="about.html">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1 class="section-title">Learning Resources</h1>
+        <p class="text-center" style="color: #666; margin-bottom: 3rem;">Start learning sign language with our comprehensive tutorials</p>
+
+        <div class="card-grid">
+            <div class="card">
+                <h3>Basics</h3>
+                <p>Learn fundamental gestures and greetings</p>
+            </div>
+            <div class="card">
+                <h3>Intermediate</h3>
+                <p>Expand your vocabulary with common phrases</p>
+            </div>
+            <div class="card">
+                <h3>Advanced</h3>
+                <p>Master complex expressions and conversations</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="year"></span> SignBridge | Based on <a href="https://github.com/yumdmb/sl-recognition-v1-fe" target="_blank">github.com/yumdmb/sl-recognition-v1-fe</a></p>
+        </div>
+    </footer>
+
+    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
+
