@@ -10,9 +10,9 @@ websockets==12.0
 # Image processing
 opencv-python-headless==4.9.0.80
 Pillow>=10.3.0
-numpy==1.26.3
+numpy>=1.24.0,<2.0.0
 
 # Sign Language Translation Library
 # Full-featured library for sign language translation
 # https://github.com/sign-language-translator/sign-language-translator
-sign-language-translator[mediapipe]==0.8.1
+sign-language-translator[all]==0.8.1
