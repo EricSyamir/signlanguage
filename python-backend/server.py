@@ -8,6 +8,8 @@ This server provides real-time sign language interpretation with sentence buildi
 from fastapi import FastAPI, File, UploadFile, Form, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import numpy as np
 import cv2
 import pickle
