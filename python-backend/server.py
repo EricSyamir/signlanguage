@@ -171,30 +171,56 @@ def load_keras_model():
     global model
     
     # Check for model files (Sign Language MNIST model)
+    # Try multiple paths for different deployment environments
+    base_dir = os.path.dirname(__file__)
+    project_root = os.path.dirname(base_dir)
+    
     model_paths = [
+        # Render/production paths (relative to server.py location)
+        os.path.join(base_dir, 'models', 'sign_language_cnn_model.h5'),
+        os.path.join(project_root, 'models', 'sign_language_cnn_model.h5'),
+        os.path.join(project_root, 'python-backend', 'models', 'sign_language_cnn_model.h5'),
+        # Local development paths
+        os.path.join(base_dir, '..', 'models', 'sign_language_cnn_model.h5'),
         'models/sign_language_cnn_model.h5',
-        '../python-backend/models/sign_language_cnn_model.h5',
+        'python-backend/models/sign_language_cnn_model.h5',
         'sign_language_cnn_model.h5',
-        # Legacy paths
-        'models/cnn_model_keras2.h5',
-        '../sl-interpreter-model/Code/cnn_model_keras2.h5',
-        'cnn_model_keras2.h5'
+        # Absolute paths for Render
+        '/opt/render/project/src/python-backend/models/sign_language_cnn_model.h5',
+        '/opt/render/project/src/models/sign_language_cnn_model.h5',
     ]
     
+    print("🔍 Searching for model file...")
     for path in model_paths:
+        abs_path = os.path.abspath(path)
+        print(f"   Checking: {abs_path}")
         if os.path.exists(path):
             try:
                 from tensorflow.keras.models import load_model
+                print(f"   ✓ Found model at: {abs_path}")
+                print(f"   📦 Loading model (this may take a moment)...")
                 model = load_model(path)
-                print(f"✅ Model loaded from: {path}")
+                print(f"✅ Model loaded successfully!")
                 print(f"   Model input shape: {model.input_shape}")
                 print(f"   Model output classes: {model.output_shape[1]}")
                 return True
             except Exception as e:
-                print(f"❌ Error loading model from {path}: {e}")
+                print(f"❌ Error loading model from {abs_path}: {e}")
+                import traceback
+                traceback.print_exc()
     
-    print("⚠️ No trained model found. Using simulated predictions.")
-    print("   To use real recognition, place sign_language_cnn_model.h5 in models/ folder")
+    print("\n⚠️ No trained model found in any of the checked locations.")
+    print("   Searched paths:")
+    for path in model_paths:
+        abs_path = os.path.abspath(path)
+        exists = "✓" if os.path.exists(path) else "✗"
+        print(f"     {exists} {abs_path}")
+    print("\n   To use real recognition:")
+    print("   1. Upload sign_language_cnn_model.h5 to Render")
+    print("   2. Place it in: python-backend/models/sign_language_cnn_model.h5")
+    print("   3. Use Render Shell: mkdir -p python-backend/models && upload file")
+    print("   4. See UPLOAD_MODEL_TO_RENDER.md for detailed instructions")
+    print("\n   Using simulated predictions for now...")
     return False
 
 def load_histogram():
@@ -372,6 +398,10 @@ async def startup_event():
     port = os.environ.get("PORT", "8000")
     print(f"Server running on port: {port}")
     print(f"Model loaded: {model_loaded}")
+    if not model_loaded:
+        print("\n⚠️  WARNING: Model not loaded!")
+        print("   Upload sign_language_cnn_model.h5 to python-backend/models/")
+        print("   See UPLOAD_MODEL_TO_RENDER.md for instructions")
     print("=" * 60 + "\n")
 
 
