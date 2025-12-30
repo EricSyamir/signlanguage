@@ -37,6 +37,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve static files (for single-service deployment on Render)
+static_dir = os.path.join(os.path.dirname(__file__), '..')
+if os.path.exists(os.path.join(static_dir, 'index.html')):
+    # Mount static assets
+    app.mount("/css", StaticFiles(directory=os.path.join(static_dir, 'css')), name="css")
+    app.mount("/js", StaticFiles(directory=os.path.join(static_dir, 'js')), name="js")
+    app.mount("/images", StaticFiles(directory=os.path.join(static_dir, 'images')), name="images")
+    
+    # Serve HTML pages
+    @app.get("/")
+    async def serve_index():
+        return FileResponse(os.path.join(static_dir, 'index.html'))
+    
+    @app.get("/recognition.html")
+    async def serve_recognition():
+        return FileResponse(os.path.join(static_dir, 'recognition.html'))
+    
+    @app.get("/learning.html")
+    async def serve_learning():
+        return FileResponse(os.path.join(static_dir, 'learning.html'))
+    
+    @app.get("/about.html")
+    async def serve_about():
+        return FileResponse(os.path.join(static_dir, 'about.html'))
+
 # ============================================================
 # Model Configuration
 # ============================================================
@@ -156,12 +181,13 @@ def load_keras_model():
     return False
 
 def load_histogram():
-    """Load hand histogram for segmentation"""
+    """Load hand histogram for segmentation (optional)"""
     global hist
     
+    base_dir = os.path.dirname(__file__)
     hist_paths = [
+        os.path.join(base_dir, 'models', 'hist'),
         'models/hist',
-        '../sl-interpreter-model/Code/hist',
         'hist'
     ]
     
@@ -303,9 +329,9 @@ async def startup_event():
     print("=" * 60 + "\n")
 
 
-@app.get("/")
-async def root():
-    """API status"""
+@app.get("/api")
+async def api_status():
+    """API status endpoint"""
     return {
         "service": "SignBridge Sign Language Interpreter",
         "status": "running",

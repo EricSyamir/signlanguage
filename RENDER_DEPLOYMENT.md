@@ -1,12 +1,12 @@
 # Deploying SignBridge to Render
 
-This guide explains how to deploy SignBridge to Render with both backend and frontend services.
+This guide explains how to deploy SignBridge to Render as a single web service.
 
 ## Architecture
 
-SignBridge requires two services on Render:
-1. **Backend Service** - Python FastAPI server (web service)
-2. **Frontend Service** - Static HTML/CSS/JS site (static site)
+SignBridge uses a **single web service** on Render:
+- **Python FastAPI Backend** - Handles API requests and serves static files
+- **Static Frontend** - HTML/CSS/JS files served by FastAPI
 
 ## Prerequisites
 
@@ -14,182 +14,151 @@ SignBridge requires two services on Render:
 - Render account (free tier works)
 - Trained model file (optional, but recommended)
 
-## Quick Start (Simplified)
+## Quick Deployment
 
-For a simpler deployment with one service:
+### Step 1: Push Code to GitHub
 
-1. **Use `render-simple.yaml`** (single service)
-2. **Or use `render.yaml`** (two services - backend + frontend)
+```bash
+git add render.yaml
+git commit -m "Add Render deployment configuration"
+git push origin master
+```
 
-## Deployment Steps
+### Step 2: Deploy on Render
 
-### Option 1: Using render.yaml (Two Services - Recommended)
+1. Go to [Render Dashboard](https://dashboard.render.com)
+2. Click **"New +"** → **"Blueprint"**
+3. Connect your GitHub repository
+4. Render will automatically detect `render.yaml`
+5. Click **"Apply"**
 
-1. **Push code to GitHub**
-   ```bash
-   git add render.yaml
-   git commit -m "Add Render deployment configuration"
-   git push origin master
-   ```
+### Step 3: Wait for Deployment
 
-2. **Create New Web Service on Render**
-   - Go to [Render Dashboard](https://dashboard.render.com)
-   - Click "New +" → "Blueprint"
-   - Connect your GitHub repository
-   - Render will automatically detect `render.yaml`
-   - Click "Apply"
+- Render will install dependencies
+- Build the Python service
+- Deploy your application
+- You'll get a URL like: `https://signbridge.onrender.com`
 
-3. **Configure Services**
-   - Render will create two services:
-     - `signbridge-backend` (Python web service)
-     - `signbridge-frontend` (Static site)
+## Configuration
 
-4. **Add Model File (Optional)**
-   - If you have a trained model, upload it via Render's file system or use environment variables
-   - Or use Render's persistent disk feature
-
-### Option 2: Using render-simple.yaml (Single Service - Simpler)
-
-1. **Rename file**:
-   ```bash
-   mv render-simple.yaml render.yaml
-   ```
-
-2. **Push to GitHub**:
-   ```bash
-   git add render.yaml
-   git commit -m "Add Render deployment"
-   git push origin master
-   ```
-
-3. **Deploy on Render**:
-   - Go to Render Dashboard
-   - Click "New +" → "Blueprint"
-   - Connect repository
-   - Render will auto-detect `render.yaml`
-   - Click "Apply"
-
-4. **Access**:
-   - Backend API: `https://signbridge.onrender.com`
-   - Frontend: Serve static files from backend or use a CDN
-
-### Option 3: Manual Setup
-
-#### Backend Service
-
-1. **Create New Web Service**
-   - Go to Render Dashboard
-   - Click "New +" → "Web Service"
-   - Connect your GitHub repository
-
-2. **Configure Backend**
-   - **Name**: `signbridge-backend`
-   - **Environment**: `Python 3`
-   - **Build Command**: `pip install -r python-backend/requirements.txt`
-   - **Start Command**: `cd python-backend && python server.py`
-   - **Environment Variables**:
-     - `PORT`: `8000` (Render sets this automatically)
-     - `PYTHON_VERSION`: `3.11.0`
-
-3. **Health Check**
-   - Path: `/health`
-
-#### Frontend Service
-
-1. **Create New Static Site**
-   - Go to Render Dashboard
-   - Click "New +" → "Static Site"
-   - Connect your GitHub repository
-
-2. **Configure Frontend**
-   - **Name**: `signbridge-frontend`
-   - **Build Command**: (leave empty)
-   - **Publish Directory**: `.` (root)
-
-3. **Environment Variables**
-   - Add: `BACKEND_URL` = `https://signbridge-backend.onrender.com`
-   - This will be used by the frontend to connect to backend
-
-## Environment Variables
-
-### Backend Service
-- `PORT` - Automatically set by Render
-- `PYTHON_VERSION` - Python version (3.11.0 recommended)
-
-### Frontend Service
-- `BACKEND_URL` - Backend service URL (optional, auto-detected)
+The `render.yaml` file configures:
+- **Service Type**: Web service (Python)
+- **Build Command**: `pip install -r python-backend/requirements.txt`
+- **Start Command**: `cd python-backend && python server.py`
+- **Port**: Automatically set by Render
+- **Health Check**: `/health` endpoint
 
 ## Model File Setup
 
 Since model files are large and excluded from git:
 
-### Option 1: Upload via Render Shell
-1. Go to your backend service → Shell
-2. Create models directory: `mkdir -p python-backend/models`
-3. Upload model file using `wget` or `curl`
+### Option 1: Upload via Render Shell (Recommended)
+
+1. After deployment, go to your service → **Shell**
+2. Create models directory:
+   ```bash
+   mkdir -p python-backend/models
+   ```
+3. Upload model file:
+   ```bash
+   # Using wget (if model is hosted online)
+   wget -O python-backend/models/sign_language_cnn_model.h5 <model-url>
+   
+   # Or use Render's file upload feature
+   ```
 
 ### Option 2: Use Render Disk
-1. Enable persistent disk in backend service settings
+
+1. Enable **Persistent Disk** in service settings
 2. Upload model file to disk
-3. Update model path in code
+3. Model persists across deployments
 
-### Option 3: Host Model Separately
-1. Upload model to cloud storage (S3, etc.)
-2. Download on startup in `server.py`
+### Option 3: Download on Startup
 
-## Updating Frontend Backend URL
+Modify `server.py` to download model from cloud storage on startup.
 
-The frontend automatically detects the backend URL. If you need to set it manually:
+## Environment Variables
 
-1. In Render Dashboard → Frontend Service → Environment
-2. Add: `BACKEND_URL` = `https://your-backend-url.onrender.com`
-3. Update `js/recognition.js` to use: `window.BACKEND_URL`
+No environment variables required! The service auto-detects:
+- Port (set by Render)
+- Backend URL (same as service URL)
+
+## Accessing Your Application
+
+After deployment:
+- **Main Site**: `https://signbridge.onrender.com`
+- **API Docs**: `https://signbridge.onrender.com/docs`
+- **Health Check**: `https://signbridge.onrender.com/health`
+- **Recognition Page**: `https://signbridge.onrender.com/recognition.html`
 
 ## Troubleshooting
 
 ### Backend won't start
 - Check build logs for dependency errors
 - Ensure `requirements.txt` is correct
-- Verify Python version matches
-
-### Frontend can't connect to backend
-- Check backend URL in frontend environment variables
-- Verify CORS is enabled in backend (already configured)
-- Check backend service is running
+- Verify Python version (3.11.0)
 
 ### Model not found
-- Verify model file path
+- Verify model file path: `python-backend/models/sign_language_cnn_model.h5`
 - Check file permissions
-- Ensure model is in `python-backend/models/`
+- Service will work without model (uses simulated predictions)
+
+### Static files not loading
+- Check file paths in HTML
+- Verify static file mounting in `server.py`
+- Check browser console for 404 errors
 
 ### Camera not working
 - HTTPS is required for camera access
 - Render provides HTTPS automatically
-- Check browser console for permissions
+- Check browser console for permission errors
 
 ## Cost Considerations
 
 - **Free Tier**: 
-  - Backend: Spins down after 15 minutes of inactivity
-  - Frontend: Always available
+  - Service spins down after 15 minutes of inactivity
+  - First request after spin-down may be slow (cold start)
+  - 750 hours/month free
 - **Paid Tier**: 
-  - Backend: Always running
+  - Always running
   - Better performance
+  - No cold starts
 
-## URLs After Deployment
+## Updating Your Deployment
 
-- Backend: `https://signbridge-backend.onrender.com`
-- Frontend: `https://signbridge-frontend.onrender.com`
-- API Docs: `https://signbridge-backend.onrender.com/docs`
+1. Make changes to your code
+2. Push to GitHub:
+   ```bash
+   git add .
+   git commit -m "Update code"
+   git push origin master
+   ```
+3. Render automatically redeploys on push
+
+## File Structure
+
+```
+SignLanguage/
+├── render.yaml              # Render configuration
+├── index.html              # Homepage
+├── recognition.html         # Recognition page
+├── config.js               # Frontend configuration
+├── python-backend/
+│   ├── server.py           # FastAPI server
+│   ├── requirements.txt    # Python dependencies
+│   ├── models/             # Model files (upload separately)
+│   └── runtime.txt        # Python version
+└── ...
+```
 
 ## Notes
 
 - Model files are excluded from git (too large)
-- You'll need to upload the model separately
-- Free tier backend may have cold starts
-- Consider using Render Disk for persistent model storage
+- Upload model separately after deployment
+- Free tier may have cold starts
+- Consider Render Disk for persistent model storage
+- All static files are served by FastAPI
 
 ---
 
-**Ready to deploy?** Push your code to GitHub and follow the steps above!
-
+**Ready to deploy?** Push your code to GitHub and follow the steps above! 🚀

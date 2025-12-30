@@ -1,10 +1,9 @@
 /**
  * SignBridge Configuration
- * Set BACKEND_URL here for custom deployments
+ * Auto-detects backend URL - no configuration needed for Render deployment
  */
 window.SignBridgeConfig = {
-    // Backend API URL
-    // Leave empty for auto-detection, or set to your backend URL
+    // Backend API URL (empty = auto-detect)
     BACKEND_URL: '',
     
     // Frame interval for recognition (milliseconds)
