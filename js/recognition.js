@@ -1,6 +1,6 @@
 /**
  * SignBridge - Sign Language Interpreter
- * Based on: https://github.com/harshbg/Sign-Language-Interpreter-using-Deep-Learning
+ * Using sign-language-translator library: https://pypi.org/project/sign-language-translator/
  * 
  * Real-time sign language interpretation with sentence building
  */
@@ -61,7 +61,8 @@ async function checkBackendStatus() {
         const response = await fetch(`${BACKEND_URL}/health`);
         if (response.ok) {
             const data = await response.json();
-            modelLoaded = data.model_loaded || false;
+            // SLT library is ready when available, no separate model file needed
+            modelLoaded = data.model_loaded || data.slt_available || false;
             
             statusEl.classList.remove('disconnected');
             if (modelLoaded) {
@@ -81,7 +82,7 @@ async function checkBackendStatus() {
                 `;
                 console.warn('Backend connected but model not loaded');
                 // Disable UI when model is not loaded
-                disableInterpreterUI('Model not loaded. Please upload model file to python-backend/models/');
+                disableInterpreterUI('Sign language translator not ready. Check server logs.');
             }
         }
     } catch (error) {
